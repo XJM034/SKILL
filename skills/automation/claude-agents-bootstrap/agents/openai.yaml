@@ -1,0 +1,4 @@
+interface:
+  display_name: "CLAUDE/AGENTS Bootstrap"
+  short_description: "Use repo evidence first to draft lean, agent-readable CLAUDE.md and AGENTS.md"
+  default_prompt: "Use $claude-agents-bootstrap to consume my context, ask only for missing high-impact information, and draft lean CLAUDE.md and AGENTS.md that map repo truth, handoff folder usage, rerun triggers, agent-readable tools, and enforced guardrails."
