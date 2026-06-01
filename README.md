@@ -56,6 +56,7 @@ SKILL/
 | Skill | Purpose |
 | ----- | ------- |
 | [`chrome-live-business-qa`](skills/automation/chrome-live-business-qa/SKILL.md) | Run visible Chrome QA for live multi-role business apps without corrupting data |
+| [`session-to-skill-and-blog`](skills/automation/session-to-skill-and-blog/SKILL.md) | Turn hard-won sessions into GitHub-backed skills and Alex Notes blog posts |
 
 ### Writing
 
