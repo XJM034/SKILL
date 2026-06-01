@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+fail=0
+
+while IFS= read -r skill_file; do
+  skill_dir="$(dirname "$skill_file")"
+  skill_name="$(basename "$skill_dir")"
+  domain="$(basename "$(dirname "$skill_dir")")"
+
+  if ! grep -Fq "skills/$domain/$skill_name/SKILL.md" README.md; then
+    echo "missing README row for $domain/$skill_name" >&2
+    fail=1
+  fi
+
+  for loader in .agent .claude; do
+    link="$loader/skills/$skill_name"
+    if [ ! -L "$link" ]; then
+      echo "missing flat symlink: $link" >&2
+      fail=1
+      continue
+    fi
+    target="$(readlink "$link")"
+    expected="../../skills/$domain/$skill_name"
+    if [ "$target" != "$expected" ]; then
+      echo "bad symlink target for $link: $target (expected $expected)" >&2
+      fail=1
+    fi
+  done
+done < <(find skills -mindepth 3 -maxdepth 3 -name SKILL.md | sort)
+
+while IFS= read -r link; do
+  if [ ! -e "$link/SKILL.md" ]; then
+    echo "orphan skill symlink: $link" >&2
+    fail=1
+  fi
+done < <(find .agent/skills .claude/skills -mindepth 1 -maxdepth 1 -type l 2>/dev/null | sort)
+
+exit "$fail"
