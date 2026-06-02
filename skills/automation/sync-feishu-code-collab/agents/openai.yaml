@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sync Feishu Code Collab"
+  short_description: "Sync Feishu code collaboration records"
+  default_prompt: "Use $sync-feishu-code-collab to sync a recent frontend-led commit into a Feishu code collaboration Base record."
