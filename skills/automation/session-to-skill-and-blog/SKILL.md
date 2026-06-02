@@ -348,9 +348,30 @@ After publishing, verify:
 curl -sS https://mx-core-production.up.railway.app/api/v3/posts | rg "<slug>|is_published"
 curl -I https://github.com/XJM034/SKILL/tree/main/skills/<domain>/<skill-name>
 curl -I https://alex-notes-phi.vercel.app
+curl -fsS https://alex-notes-phi.vercel.app/posts/ | rg "<slug>|Latest notes"
+curl -fsS https://alex-notes-phi.vercel.app/posts/<slug>/ | rg "<title>|article-page"
+curl -fsS https://alex-notes-phi.vercel.app/search.json | rg '"slug":"<slug>"'
 ```
 
-Then open `https://alex-notes-phi.vercel.app` and confirm the new post appears.
+Then open `https://alex-notes-phi.vercel.app` and `/posts/`. The root route is
+a standalone personal homepage, so it only needs to show the new post in
+Recent Writing when the post is among the latest entries. The durable proof is:
+`/posts/` lists the post, `/posts/<slug>/` renders the article, and
+`/search.json` contains the slug.
+
+For posts that include MX Space rich content, Lexical nodes, or Excalidraw
+diagrams, the frontend article page is the proof surface. MX Space admin preview
+can render correctly while Alex Notes still leaks raw payloads if the frontend
+renderer is stale. In that case, explicitly check the public article body does
+not expose raw renderer data:
+
+```bash
+curl -fsS https://alex-notes-phi.vercel.app/posts/<slug>/ | rg -i "<excalidraw|CDATA|\"elements\"|Excalidraw Whiteboard" && exit 1 || true
+```
+
+Then visually open `/posts/<slug>/` and confirm each Excalidraw block appears as
+a white embedded canvas with working pan/zoom controls, not as JSON, CDATA, or
+literal XML tags.
 Paste the final Alex Notes URL and skill URL back into the originating session
 as the asset-ization receipt.
 
@@ -381,6 +402,7 @@ as the asset-ization receipt.
 | Picking `<category>` without checking what exists    | `mxs category list --output llm` first; reuse existing slug.                         |
 | Auto-creating a new category                         | Requires explicit second confirmation from the user before `mxs category create`.    |
 | Forgetting `aiGen=2`                                 | `publish-post.sh` already passes `--meta '{"aiGen":2}'`; on first update of a legacy post, re-attach with `mxs post update <slug> --meta '{"aiGen":2}'`. |
+| Trusting MX Space admin preview alone                | Verify Alex Notes `/posts/<slug>/` too. Frontend renderer bugs can leak raw `<excalidraw>`, `CDATA`, or JSON even when MX Space admin looks correct. |
 
 ## Verification
 
@@ -406,5 +428,10 @@ as the asset-ization receipt.
       <slug> --profile railway-mx-space` only after the user approves.
 - [ ] `aiGen=2` set on the post (via `publish-post.sh` at create, or
       `mxs post update --meta` on first edit of a legacy post).
-- [ ] Alex Notes frontend shows the public post.
+- [ ] Alex Notes frontend shows the public post in `/posts/`, renders
+      `/posts/<slug>/`, and includes the slug in `/search.json`; root may show
+      only the latest entries because it is now a standalone homepage.
+- [ ] Rich content / Excalidraw posts render cleanly in Alex Notes: no raw
+      `<excalidraw>`, `CDATA`, JSON `elements`, or `Excalidraw Whiteboard`
+      placeholder leaks in `/posts/<slug>/`.
 - [ ] Final post URL and skill URL pasted back into the originating session.
