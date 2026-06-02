@@ -65,6 +65,7 @@ SKILL/
 
 | Skill | Purpose |
 | ----- | ------- |
+| [`handoff`](skills/writing/handoff/SKILL.md) | Create dated handoff notes for durable AI-to-AI continuation |
 
 ### Research
 
