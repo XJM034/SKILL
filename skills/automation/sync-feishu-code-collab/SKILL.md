@@ -1,32 +1,34 @@
 ---
 name: sync-feishu-code-collab
-description: Use when submitting, updating, or drafting Feishu/Lark Base code-collaboration records or maintaining the linked product task board for frontend/backend coordination. Covers push records, commits, MRs, deployments, backend handoff docs, style screenshots, user feedback intake, task boards, bug/optimization/refactor/new-requirement backlogs, PM progress dashboards, task evidence attachments, and test-case source tracking. Triggers include "补充协同相关信息", "同步到飞书协同表", "补推送记录", "前后端协作文档", "页面修改截图", "用户反馈录入", "反馈入板", "任务看板", "Bug 池", "待优化", "PM 进度总览", "测试用例来源", and "用 lark-cli 补一条记录".
+description: Use when submitting, updating, or drafting Feishu/Lark Base code-collaboration records; maintaining the linked product task board; or syncing task-board-derived test cases for frontend/backend coordination. Covers push records, commits, MRs, deployments, backend handoff docs, style screenshots, user feedback intake, task boards, bug/optimization/refactor/new-requirement backlogs, PM progress dashboards, task evidence attachments, test-case repository/import work, bug-derived regression cases, release-gate views, and test execution records. Triggers include "补充协同相关信息", "同步到飞书协同表", "补推送记录", "前后端协作文档", "页面修改截图", "用户反馈录入", "反馈入板", "任务看板", "Bug 池", "待优化", "PM 进度总览", "测试用例来源", "测试用例", "用例导入", "Bug 派生用例", "发布门禁", "测试执行记录", and "用 lark-cli 补一条记录".
 ---
 
 # Sync Feishu Code Collab
 
 ## Current Scope
 
-Use this skill as a frontend-led collaboration workflow by default. It is tuned for two related Feishu/Base surfaces:
+Use this skill as a frontend-led collaboration workflow by default. It is tuned for three related Feishu/Base surfaces:
 
 - Push ledger mode: frontend commits, push records, MRs, deployments, backend-facing docs, UI/copy/interaction screenshots, and frontend repos that publish backend-visible review material.
 - Task board mode: product-quality backlog items such as bugs, optimizations, refactors, new requirements, PM progress dashboards, issue evidence attachments, and future test-case source tracking.
+- Test-case mode: long-lived test case repositories, task-board bug regression cases, selected high-risk optimization acceptance cases, release-gate views, test execution records, and failed-test backflow into the task board.
 
 Backend teams can reuse the workflow, but they must configure their own repo-visible collaboration docs, Base field mapping, verification commands, attachment policy, task taxonomy, and `lark-cli` auth/scopes before performing external writes.
 
 ## Inputs
 
 - Target repo or current working directory.
-- Requested mode: push ledger, task board, dashboard/view maintenance, attachment sync, or draft-only.
-- Commit, branch, MR, deployment, record id, task id, dashboard id, view id, or enough context to identify the latest relevant change.
+- Requested mode: push ledger, task board, test-case sync, test execution record, dashboard/view maintenance, attachment sync, or draft-only.
+- Commit, branch, MR, deployment, record id, task id, case id, execution id, dashboard id, view id, or enough context to identify the latest relevant change.
 - User feedback package, problem description, screenshots/videos, bug list, optimization/refactor/new-requirement list, or PM-dashboard request when working in task board mode.
+- Task-board records, bug/optimization filters, existing quality docs, manual test packages, or release-gate criteria when working in test-case mode.
 - Project-local Feishu/Base collaboration docs, or a table link/config supplied by the user.
 - Verification results that were actually run.
 - Screenshot or evidence batch path only when visual/task evidence is needed.
 
 ## Files Provided
 
-- `references/feishu-code-collab-requirements.md`: detailed project discovery, `lark-cli` baseline setup, field mapping, task board rules, dashboard/view rules, screenshot/evidence policy, push/privacy boundaries, and final report checklist.
+- `references/feishu-code-collab-requirements.md`: detailed project discovery, project-specific Base schema profiles, `lark-cli` baseline setup, field mapping, task board rules, test-case/execution-record rules, dashboard/view rules, screenshot/evidence policy, push/privacy boundaries, and final report checklist.
 
 ## Core Rule
 
@@ -34,6 +36,7 @@ Treat the Feishu/Base as a collaboration surface, not as the only source of trut
 
 - Push records are the collaboration ledger for code changes, handoff docs, verification scope, and optional style screenshots.
 - Task board records are the product-quality backlog and the future source pool for test-case design.
+- Test-case records are the long-lived "how to test" asset. Test execution records are the per-run "what happened this time" evidence. Do not collapse them into one table unless the project explicitly uses that shape.
 - Interface issues, field contracts, permissions, stability problems, detailed test results, and backend action items must still live in the target project's repo-local collaboration docs before they are referenced in Feishu.
 
 Do not write product backlog tasks into the push-record table unless the project explicitly uses one table for both workflows. Do not treat the task board as a replacement for repo docs when a counterpart needs durable technical evidence.
@@ -46,11 +49,11 @@ Confirm `lark-cli` is installed, configured, and authenticated before writing. I
 
 ```text
 [1] Find project rules and current Feishu/Base surfaces
-[2] Decide whether this is push ledger mode or task board mode
-[3] Identify branch/commit/MR/record/task/view/dashboard target
+[2] Decide whether this is push ledger, task board, test-case, execution-record, or dashboard/view mode
+[3] Identify branch/commit/MR/record/task/case/execution/view/dashboard target
 [4] Confirm repo-visible counterpart docs when technical handoff is involved
 [5] Verify lark-cli auth and Base schema
-[6] Create or update records, views, dashboards, or attachments
+[6] Create or update records, test cases, execution records, views, dashboards, or attachments
 [7] Read back and report exact evidence
 ```
 
@@ -63,6 +66,7 @@ Confirm `lark-cli` is installed, configured, and authenticated before writing. I
 2. Identify the work mode and target.
    - Push ledger mode: prefer a user-specified branch, commit, MR, deployment, or record id; otherwise inspect the current branch, recent commits, and dirty worktree.
    - Task board mode: prefer a user-specified task id, view, dashboard, table, backlog list, or user feedback package; otherwise read the existing task board schema before creating or reshaping fields.
+   - Test-case mode: prefer a user-specified case id, task filter, case repository table, execution table, release-gate view, or quality source; otherwise read the task board, test-case table, execution-record table, and relevant views before writing.
    - Do not overwrite or clean unrelated user changes.
 
 3. Prepare repo-visible handoff material.
@@ -90,31 +94,45 @@ Confirm `lark-cli` is installed, configured, and authenticated before writing. I
    - Closed bugs may stay in the task board for regression history, but they should not clutter the active development flow.
    - Future test cases should derive from confirmed bug tasks in the task board rather than from free-floating text.
 
-7. Maintain dashboards and views carefully.
+7. Create or update test-case records.
+   - Use this mode when the user asks to pull suitable bugs or optimizations from the task board into test cases, maintain a test-case repository, manage release-gate cases, or record test execution results.
+   - Treat task-board bugs as the default source for regression cases, including closed historical bugs when they are useful recurrence guards.
+   - Import optimizations only when they affect core flows, data correctness, permissions/session behavior, write protection, cross-role consistency, mobile/browser compatibility, or export/copy accuracy. Keep low-risk visual tweaks, broad refactors, and unconfirmed new requirements out of the formal case repository until the acceptance rule is clear.
+   - Link each imported case back to the source task with the configured linked-record field. Do not replace the link with a text note when a link field exists.
+   - Update the task board's test-case status only after the case record has been created and read back.
+   - Mark imported cases as not-yet-executed unless a current execution record proves otherwise. "Case imported" does not mean "tested", "covered", or "passed".
+   - Use test execution records for actual runs. Failed, blocked, or partially passed execution records must link back to an existing task, create a new task if approved, or include an explicit backflow exemption reason.
+   - Read back the all-cases, bug-derived, release-gate, needs-completion, task-board missing-case, and high-priority pending-test views after the write.
+   - Record any repo-local quality history update separately when the test source, case count, minimum regression set, or execution plan changes.
+
+8. Maintain dashboards and views carefully.
    - PM overview dashboards should summarize total tasks, active P0/P1 risk, status distribution, priority distribution, type distribution, and test-case readiness when those fields exist.
    - Verify dashboard blocks with read-back data after creation. Do not leave broken or experimental blocks in the user's Base.
    - For grouped dashboard charts, use the `group_by` data configuration shape documented in the reference file, not ad hoc `dimension` or `dimensions` keys.
 
-8. Handle screenshots and task evidence conservatively.
+9. Handle screenshots and task evidence conservatively.
    - Screenshots and attachments are local by default. Upload external attachments only when the user explicitly asks to upload/sync them.
    - For push ledger screenshots, follow the project style-screenshot policy.
    - For task board evidence, use the task board's evidence attachment field when configured. Do not reuse a push-record frontend screenshot field as the task evidence field unless the project says they are the same field.
    - If live data cannot show the target state yet, mark it as a frontend target-state preview and explain why live/current state is not the source of truth.
    - If temporary fixture data is needed, keep it outside the repo and clean it after user approval. Never add repo mocks or runtime fallback data just to make a screenshot.
 
-9. Read back and report.
+10. Read back and report.
    - After writing, read the Feishu record/view/dashboard back and confirm key fields, filters, grouping, charts, and attachments.
    - Summarize the record id/number or task count, branch, commit SHA, docs referenced, screenshot/evidence upload status, and any remaining authorization or validation gaps.
 
 ## What To Load
 
-Read `references/feishu-code-collab-requirements.md` when performing a real sync, drafting field values, working on task boards, maintaining views/dashboards, dealing with screenshots/evidence attachments, or deciding whether a document/asset may be pushed or uploaded.
+Read `references/feishu-code-collab-requirements.md` when performing a real sync, drafting field values, working on task boards, syncing test cases, creating execution records, maintaining views/dashboards, dealing with screenshots/evidence attachments, or deciding whether a document/asset may be pushed or uploaded.
 
 ## Safety Boundaries
 
 - Do not place Base identifiers from a protected project doc into public docs, PR text, or generic skill updates.
 - Do not upload screenshots or attachments unless the user explicitly requested external upload.
 - Do not write task backlog items into the push ledger unless the project explicitly uses one table for both workflows.
+- Do not write test cases into the task board or push ledger when the project has a dedicated test-case table. Link across tables instead.
+- Do not mark a task as tested, covered, passed, or closed merely because a test case was imported.
+- Do not create test execution records for cases that were only drafted or imported.
 - Do not create campus-specific task tables when a campus/scope field can express rollout scope.
 - Do not use local-only agent rules, raw test artifacts, screenshot folders, browser traces, or private account caches as backend-visible evidence unless the project explicitly allows it.
 - Do not treat a Feishu record as proof that a backend issue is documented; the repo-local collaboration doc remains the durable technical handoff.
@@ -130,6 +148,10 @@ Read `references/feishu-code-collab-requirements.md` when performing a real sync
 | Pasting a raw bug list into one long text field | Split it into structured task records with type, priority, owner, impact, evidence, expected result, and acceptance criteria. |
 | Creating separate task tables for each campus | Use a target campus/scope field unless the project explicitly requires separate tables. |
 | Recording a feedback package as a push record | Treat problem descriptions and screenshots as task board intake unless the user explicitly asks for a push/update record. |
+| Treating imported test cases as executed tests | Keep imported cases at not-yet-executed/current-project equivalent status until a test execution record exists. |
+| Importing every optimization into the case repository | Only import optimizations that affect core flows, data correctness, permission/session, write protection, cross-role consistency, compatibility, or export/copy accuracy. |
+| Losing the source task link | Use the configured linked-record field from case to task board; do not rely on a free-text task number alone. |
+| Creating an execution record without backflow | Failed/blocked/partial execution records must link to a task or contain an explicit backflow exemption reason. |
 | Letting closed items fill the development kanban | Filter out closed status records in active development views. |
 | Seeing an "未分类" kanban lane after design changes | Remove blank auto-created records and filter the view to records with a non-empty task id. |
 | Building dashboard charts with `dimension` or `dimensions` | Use the CLI-supported `group_by` data configuration and verify block data after creation. |
@@ -142,12 +164,14 @@ Read `references/feishu-code-collab-requirements.md` when performing a real sync
 ## Verification Checklist
 
 - [ ] Current project rules and Feishu/Base table source were read.
-- [ ] Requested mode was classified as push ledger, task board, dashboard/view maintenance, attachment sync, or draft-only.
+- [ ] Requested mode was classified as push ledger, task board, test-case sync, test execution record, dashboard/view maintenance, attachment sync, or draft-only.
 - [ ] `lark-cli` binary, auth context, and required Base permissions were confirmed.
 - [ ] Base/table/field/view/dashboard schema was fetched before writes, unless an exact current schema was supplied.
 - [ ] Branch, commit SHA, MR/deploy link, task ids, dashboard ids, and verification results were not invented.
 - [ ] Backend-facing docs referenced in the collaboration note are repo-visible.
 - [ ] Task board records are structured and not raw pasted text.
+- [ ] Test-case imports link back to source tasks and are not reported as executed unless execution records exist.
+- [ ] Bug-derived, release-gate, needs-completion, and task-board missing-case views were read back when test cases changed.
 - [ ] Active development views hide closed records and filter out blank task ids.
 - [ ] PM dashboard blocks were read back and produced non-empty data when data exists.
 - [ ] Screenshot/evidence upload was skipped unless explicitly requested.
