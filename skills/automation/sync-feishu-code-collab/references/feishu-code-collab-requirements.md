@@ -621,10 +621,12 @@ For dashboard maintenance:
 ```bash
 lark-cli base +dashboard-list --base-token "<base-token>" --as user
 lark-cli base +dashboard-create --base-token "<base-token>" --name "<dashboard-name>" --as user
-lark-cli base +dashboard-block-create --base-token "<base-token>" --dashboard-id "<dashboard-id>" --json '<block-json>' --as user
-lark-cli base +dashboard-block-get-data --base-token "<base-token>" --dashboard-id "<dashboard-id>" --block-id "<block-id>" --as user
-lark-cli base +dashboard-arrange --base-token "<base-token>" --dashboard-id "<dashboard-id>" --layout '<layout-json>' --as user
+lark-cli base +dashboard-block-create --base-token "<base-token>" --dashboard-id "<dashboard-id>" --name "<block-name>" --type "<block-type>" --data-config '<data-config-json>' --as user
+lark-cli base +dashboard-block-get-data --base-token "<base-token>" --block-id "<block-id>" --as user
+lark-cli base +dashboard-arrange --base-token "<base-token>" --dashboard-id "<dashboard-id>" --as user
 ```
+
+`+dashboard-arrange` runs server-side smart layout and does not accept a manual layout JSON. Use it only when the user asks to arrange or beautify dashboard blocks.
 
 For attachment upload:
 
